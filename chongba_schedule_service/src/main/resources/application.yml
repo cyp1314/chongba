@@ -13,6 +13,9 @@ spring:
     host: localhost
     password: root
 
+chongba:
+  preLoad: 1 # 预加载时间配置，分钟伟单位
+
 
 logging:
   level:

@@ -48,20 +48,29 @@ public class TaskServiceTest {
             taskService.addTask(task);
         }
 
-        while (taskService.size(1,1) > 0){
-            Task task = taskService.poll(1,1);
-
+        while (true){
+            Task task = taskService.poll(250,250);
             if (task!=null){
                 System.out.println("任务成功消费："+task.getTaskId());
             }
-
-
             try {
                 Thread.sleep(1000L);
             } catch (InterruptedException e){
                 e.printStackTrace();
             }
         }
+
+//        while (taskService.size(1,1) > 0){
+//            Task task = taskService.poll(1,1);
+//            if (task!=null){
+//                System.out.println("任务成功消费："+task.getTaskId());
+//            }
+//            try {
+//                Thread.sleep(1000L);
+//            } catch (InterruptedException e){
+//                e.printStackTrace();
+//            }
+//        }
     }
 
     @Test

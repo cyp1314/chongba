@@ -7,6 +7,7 @@ import com.chongba.entity.Constants;
 import com.chongba.entity.Task;
 import com.chongba.exception.ScheduleSystemException;
 import com.chongba.exception.TaskNotExistException;
+import com.chongba.schedule.config.SystemParams;
 import com.chongba.schedule.inf.TaskService;
 import com.chongba.schedule.mapper.TaskInfoLogsMapper;
 import com.chongba.schedule.mapper.TaskInfoMapper;
@@ -16,11 +17,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,6 +54,12 @@ public class TaskServiceImpl implements TaskService {
     @Autowired
     private ThreadPoolTaskExecutor myThreadPool;
 
+    @Autowired
+    private ThreadPoolTaskScheduler threadPoolTaskScheduler;
+
+    @Autowired
+    private SystemParams systemParams;
+
     @Transactional
     @Override
     public long addTask(Task task) throws ScheduleSystemException {
@@ -75,10 +84,13 @@ public class TaskServiceImpl implements TaskService {
     private void addTaskToCache(TaskInfoEntity task) {
 
         String key = task.getTaskType() + "_" + task.getPriority();
-
+        // 获取未来五分钟
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MINUTE,5);
+        long timeInMillis = calendar.getTimeInMillis();
         if (task.getExecuteTime() <= System.currentTimeMillis()){
             cacheService.lRightPush(Constants.TOPIC+key,JSON.toJSONString(task));
-        }else {
+        }else if (task.getExecuteTime() <= timeInMillis){
             cacheService.zAdd(Constants.FUTURE+key, JSON.toJSONString(task),task.getExecuteTime());
         }
     }
@@ -111,27 +123,19 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     @Override
     public Task poll(int type,int priority) throws TaskNotExistException {
-
         Future<TaskInfoEntity> future = myThreadPool.submit(new Callable<TaskInfoEntity>() {
             @Override
             public TaskInfoEntity call() throws Exception {
                 TaskInfoEntity task = null;
-
                 try {
-
                     String key = type + "_" + priority;
-
                     String task_json = cacheService.lLeftPop(Constants.TOPIC + key);
-
                     if (!StringUtils.isEmpty(task_json)){
                         task = JSON.parseObject(task_json,TaskInfoEntity.class);
-
                         cacheService.zRemove(Constants.DBCACHE,task_json);
-
                         updateDb(task.getTaskId(),Constants.EXECUTED);
                     }
                     return task;
-
                 } catch (TaskNotExistException e){
                     log.warn("poll task exception");
                     throw  new TaskNotExistException(e);
@@ -139,10 +143,14 @@ public class TaskServiceImpl implements TaskService {
             }
         });
 
-        Task result = null;
-
+        Task result = new Task();
         try {
             TaskInfoEntity taskInfoEntity = future.get(5, TimeUnit.SECONDS);
+
+            if (taskInfoEntity ==null ){
+                return null;
+            }
+
             BeanUtils.copyProperties(taskInfoEntity,result);
             return result;
         } catch (Exception e){
@@ -222,6 +230,16 @@ public class TaskServiceImpl implements TaskService {
 
     @PostConstruct
     private void syncData(){
+
+        threadPoolTaskScheduler.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                reloadData();
+            }
+        }, TimeUnit.MINUTES.toMillis(5));
+    }
+
+    private void reloadData() {
         log.debug("------------------初始化---------------------");
         System.out.println("init............");
 
@@ -234,6 +252,11 @@ public class TaskServiceImpl implements TaskService {
 
         long start = System.currentTimeMillis();
         CountDownLatch latch = new CountDownLatch(maps.size());
+
+        // 获取未来五分钟
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MINUTE,systemParams.getPreLoad());
+        long timeInMillis = calendar.getTimeInMillis();
 
         for (Map<String, Object> map : maps) {
 
@@ -248,6 +271,7 @@ public class TaskServiceImpl implements TaskService {
                     QueryWrapper<TaskInfoEntity> subWrapper = new QueryWrapper<>();
                     subWrapper.eq("task_type",taskType);
                     subWrapper.eq("priority",priority);
+                    subWrapper.lt("execute_time",timeInMillis);
                     List<TaskInfoEntity> taskInfoEntities = taskInfoMapper.selectList(subWrapper);
                     for (TaskInfoEntity taskInfoEntity : taskInfoEntities) {
                         addTaskToCache(taskInfoEntity);
