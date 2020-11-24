@@ -12,4 +12,7 @@ public class Constants {
     public static final int CANCELLED = 2;  // 已取消状态
 
     public static String DBCACHE="db_cache";
+
+    public static String FUTURE="future_";
+    public static String TOPIC="topic_";
 }

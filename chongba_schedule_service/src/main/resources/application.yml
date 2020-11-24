@@ -17,3 +17,4 @@ spring:
 logging:
   level:
     com.chongba.schedule: debug
+  config: classpath:logback.xml
