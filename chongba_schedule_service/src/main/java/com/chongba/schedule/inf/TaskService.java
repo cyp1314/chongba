@@ -13,7 +13,25 @@ import com.chongba.exception.TaskNotExistException;
  */ 
 public interface TaskService {
 
-    long addTask(Task task) throws ScheduleSystemException;
+    void addTask(Task task) throws ScheduleSystemException;
 
     boolean cancelTask(long taskId) throws TaskNotExistException;
+
+    /**
+     * @description: 获取任务数量
+     * @param: * @param:
+     * @return: long
+     * @author Mr-CHEN
+     * @date: 2020-11-24 14:14
+     */
+    public long size();
+
+    /** 
+     * @description: 拉取任务
+     * @param: * @param:  
+     * @return: com.chongba.entity.Task 
+     * @author Mr-CHEN
+     * @date: 2020-11-24 14:21
+     */ 
+    public Task poll() throws TaskNotExistException;
 }

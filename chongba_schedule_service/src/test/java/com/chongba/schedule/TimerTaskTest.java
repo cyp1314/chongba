@@ -1,4 +1,4 @@
-package com.chongba.schedule.jdk;
+package com.chongba.schedule;
 
 import java.util.Date;
 import java.util.Timer;

@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
  * @author Mr-CHEN
@@ -30,7 +29,7 @@ public class TaskInfoEntity implements Serializable {
     private Long taskId;
 
     @TableField
-    private Date executeTime;
+    private Long executeTime;
 
     @TableField
     private Integer priority;

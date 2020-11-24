@@ -1,7 +1,6 @@
 package com.chongba.schedule;
 
 import com.alibaba.fastjson.JSON;
-import com.chongba.ScheduleApplication;
 import com.chongba.cache.CacheService;
 import com.chongba.entity.Task;
 import org.junit.Test;

@@ -1,6 +1,5 @@
-package com.chongba.schedule.jdk;
+package com.chongba.schedule;
 
-import com.chongba.schedule.ScheduleApplication;
 import com.chongba.schedule.mapper.TaskInfoMapper;
 import com.chongba.schedule.pojo.TaskInfoEntity;
 import org.junit.Test;
@@ -8,8 +7,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.Date;
 
 /**
  * @author Mr-CHEN
@@ -27,7 +24,7 @@ public class TaskInfoMapperTest {
     @Test
     public void test1(){
         TaskInfoEntity taskInfoEntity = new TaskInfoEntity();
-        taskInfoEntity.setExecuteTime(new Date());
+        taskInfoEntity.setExecuteTime(System.currentTimeMillis());
         taskInfoEntity.setPriority(1);
         taskInfoEntity.setTaskType(1001);
         taskInfoEntity.setParameters("test".getBytes());

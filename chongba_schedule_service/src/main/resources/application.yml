@@ -8,6 +8,10 @@ spring:
     username: root
     password: root
 
+  redis:
+    port: 6379
+    host: localhost
+    password: root
 
 
 logging:
