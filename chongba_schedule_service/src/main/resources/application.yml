@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: schedule-service
+
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/chongba?serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: root
+
+
+
+logging:
+  level:
+    com.chongba.schedule: debug

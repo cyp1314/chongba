@@ -1,0 +1,3 @@
+# Project exclude paths
+/chongba_common/target/
+/chongba_schedule_service/target/
